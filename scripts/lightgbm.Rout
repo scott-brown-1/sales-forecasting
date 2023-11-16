@@ -1,0 +1,210 @@
+
+R version 4.3.2 (2023-10-31) -- "Eye Holes"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #########################
+> ### Imports and setup ###
+> #########################
+> 
+> setwd('..')
+> 
+> library(tidyverse)
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.3     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.1.1 ──
+✔ broom        1.0.5     ✔ rsample      1.2.0
+✔ dials        1.2.0     ✔ tune         1.1.2
+✔ infer        1.0.5     ✔ workflows    1.1.3
+✔ modeldata    1.2.0     ✔ workflowsets 1.0.1
+✔ parsnip      1.1.1     ✔ yardstick    1.2.0
+✔ recipes      1.0.8     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ scales::discard() masks purrr::discard()
+✖ dplyr::filter()   masks stats::filter()
+✖ recipes::fixed()  masks stringr::fixed()
+✖ dplyr::lag()      masks stats::lag()
+✖ yardstick::spec() masks readr::spec()
+✖ recipes::step()   masks stats::step()
+• Search for functions across packages at https://www.tidymodels.org/find/
+> library(bonsai)
+> library(doParallel)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> source('./scripts/load_data.R')
+> source('./scripts/analysis.R')
+> 
+> PARALLEL <- T
+> 
+> set.seed(843)
+> 
+> # parallel
+> if(PARALLEL){
++   cl <- makePSOCKcluster(10)
++   registerDoParallel(cl)
++ }
+> 
+> #########################
+> ####### Load Data #######
+> #########################
+> 
+> ## Load data
+> data <- load_data()
+Rows: 913000 Columns: 4
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (3): store, item, sales
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 45000 Columns: 4
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (3): id, store, item
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+[1] "Selected store: 6"
+[1] "Selected item: 47"
+> train <- data$train
+> test <- data$test
+> 
+> ## Set up preprocessing
+> prepped_recipe <- setup_recipe(train)
+> 
+> ## Bake recipe
+> bake(prepped_recipe, new_data=train)
+# A tibble: 1,826 × 12
+   date       store  item sales date_dow date_month date_year date_doy
+   <date>     <dbl> <dbl> <dbl> <fct>    <fct>          <int>    <dbl>
+ 1 2013-01-01     6    47     5 Tue      Jan             2013  0      
+ 2 2013-01-02     6    47    10 Wed      Jan             2013  0.00861
+ 3 2013-01-03     6    47    10 Thu      Jan             2013  0.0172 
+ 4 2013-01-04     6    47    11 Fri      Jan             2013  0.0258 
+ 5 2013-01-05     6    47     9 Sat      Jan             2013  0.0344 
+ 6 2013-01-06     6    47    17 Sun      Jan             2013  0.0430 
+ 7 2013-01-07     6    47     6 Mon      Jan             2013  0.0516 
+ 8 2013-01-08     6    47    11 Tue      Jan             2013  0.0602 
+ 9 2013-01-09     6    47     9 Wed      Jan             2013  0.0689 
+10 2013-01-10     6    47     9 Thu      Jan             2013  0.0775 
+# ℹ 1,816 more rows
+# ℹ 4 more variables: date_decimal <dbl>, sinDOY <dbl>, cosDOY <dbl>,
+#   sin_scaled <dbl>
+> bake(prepped_recipe, new_data=test)
+# A tibble: 90 × 11
+   date       store  item date_dow date_month date_year date_doy date_decimal
+   <date>     <dbl> <dbl> <fct>    <fct>          <int>    <dbl>        <dbl>
+ 1 2018-01-01     6    47 Mon      Jan             2018  0              2018 
+ 2 2018-01-02     6    47 Tue      Jan             2018  0.00861        2018.
+ 3 2018-01-03     6    47 Wed      Jan             2018  0.0172         2018.
+ 4 2018-01-04     6    47 Thu      Jan             2018  0.0258         2018.
+ 5 2018-01-05     6    47 Fri      Jan             2018  0.0344         2018.
+ 6 2018-01-06     6    47 Sat      Jan             2018  0.0430         2018.
+ 7 2018-01-07     6    47 Sun      Jan             2018  0.0516         2018.
+ 8 2018-01-08     6    47 Mon      Jan             2018  0.0602         2018.
+ 9 2018-01-09     6    47 Tue      Jan             2018  0.0689         2018.
+10 2018-01-10     6    47 Wed      Jan             2018  0.0775         2018.
+# ℹ 80 more rows
+# ℹ 3 more variables: sinDOY <dbl>, cosDOY <dbl>, sin_scaled <dbl>
+> 
+> ## Explore data
+> # train %>%
+> #   timetk::plot_time_series(date, sales, .interactive=F) +
+> #   geom_line(data=viz, aes(x=date,y=sin_scaled, color='red'))
+> 
+> #########################
+> ## Fit Regression Model #
+> #########################
+> 
+> ## Define model
+> boost_model <- boost_tree(
++   trees = 200,#tune(), #200
++   tree_depth = tune(), #15
++   learn_rate = 0.1,#tune(), #0.1,
++   mtry = 5,#tune(), #3,
++   min_n = 20, #tune(), #20,
++   loss_reduction = 0 #tune(), #0
++ ) %>% 
++   set_engine("lightgbm") %>% 
++   set_mode("regression")
+> 
+> ## Define workflow
+> boost_wf <- workflow(prepped_recipe) %>%
++   add_model(boost_model)
+> 
+> ## Grid of values to tune over
+> tuning_grid <- grid_regular(
++   #trees(),
++   tree_depth(range=c(10,15)),
++   #learn_rate(),
++   #mtry(range=c(4,5)),#ncol(train))),
++   #min_n(),
++   #loss_reduction(),
++   levels = 2)
+> 
+> ## Split data for CV
+> folds <- vfold_cv(train, v = 2, repeats=1)
+> 
+> ## Run the CV
+> cv_results <- boost_wf %>%
++   tune_grid(resamples=folds,
++             grid=tuning_grid,
++             metrics=metric_s> 
+> ## Fin> 
+> ## Find optimal tuning params
+> best_params <- cv_results %>%
++   select_best('smape')
+> 
+> print(best_params)
+# A tibble: 1 × 2
+  tree_depth .config             
+       <int> <chr>               
+1         10 Preprocessor1_Model1
+> 
+> ## Find best tune results
+> best_smape <- cv_results %>%
++   collect_metrics() %>%
++   pull(mean) %>%
++   min()
+> 
+> print(best_smape)
+[1] 22.42719
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  8.340   0.497 510.167 

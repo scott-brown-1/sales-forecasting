@@ -2,6 +2,8 @@
 ### Imports and setup ###
 #########################
 
+setwd('..')
+
 library(tidyverse)
 library(tidymodels)
 library(bonsai)
@@ -10,7 +12,7 @@ library(doParallel)
 source('./scripts/load_data.R')
 source('./scripts/analysis.R')
 
-PARALLEL <- F
+PARALLEL <- T
 
 set.seed(843)
 
@@ -47,10 +49,10 @@ bake(prepped_recipe, new_data=test)
 
 ## Define model
 boost_model <- boost_tree(
-  trees = tune(), #200
+  trees = 200,#tune(), #200
   tree_depth = tune(), #15
-  learn_rate = tune(), #0.1,
-  mtry = tune(), #3,
+  learn_rate = 0.1,#tune(), #0.1,
+  mtry = 5,#tune(), #3,
   min_n = 20, #tune(), #20,
   loss_reduction = 0 #tune(), #0
 ) %>% 
@@ -63,16 +65,16 @@ boost_wf <- workflow(prepped_recipe) %>%
 
 ## Grid of values to tune over
 tuning_grid <- grid_regular(
-  trees(),
-  tree_depth(),
-  learn_rate(),
-  mtry(range=c(3,ncol(train))),
+  #trees(),
+  tree_depth(range=c(10,15)),
+  #learn_rate(),
+  #mtry(range=c(4,5)),#ncol(train))),
   #min_n(),
   #loss_reduction(),
-  levels = 6)
+  levels = 2)
 
 ## Split data for CV
-folds <- vfold_cv(train, v = 6, repeats=1)
+folds <- vfold_cv(train, v = 2, repeats=1)
 
 ## Run the CV
 cv_results <- boost_wf %>%
