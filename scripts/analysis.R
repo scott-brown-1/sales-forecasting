@@ -6,8 +6,8 @@ setup_recipe <- function(df){
     step_date(date, features='doy') %>%
     step_date(date, features='decimal') %>%
     step_range(date_doy, min=0, max=pi) %>%
-    step_mutate(sinDOY=sin(date_doy), cosDOY=cos(date_doy)) %>%
-    step_mutate(sin_scaled = 0.5 * sin(date_doy) * 30)
+    step_mutate(sinDOY=sin(date_doy), cosDOY=cos(date_doy))# %>%
+    #step_mutate(sin_scaled = 0.5 * sin(date_doy) * 30)
   
     #step_lag(sales,lag=365) %>%
     # step_mutate(sin_scaled = 0.5 * sin(date_doy) * mean(

@@ -2,7 +2,7 @@
 ### Imports and setup ###
 #########################
 
-setwd('..')
+#setwd('..')
 
 library(tidyverse)
 library(tidymodels)
@@ -18,7 +18,7 @@ set.seed(843)
 
 # parallel
 if(PARALLEL){
-  cl <- makePSOCKcluster(10)
+  cl <- makePSOCKcluster(8)
   registerDoParallel(cl)
 }
 
@@ -39,9 +39,10 @@ bake(prepped_recipe, new_data=train)
 bake(prepped_recipe, new_data=test)
 
 ## Explore data
-# train %>%
-#   timetk::plot_time_series(date, sales, .interactive=F) +
-#   geom_line(data=viz, aes(x=date,y=sin_scaled, color='red'))
+viz <- bake(prepped_recipe, train)
+train %>%
+  timetk::plot_time_series(date, sales, .interactive=F) +
+  geom_line(data=viz, aes(x=date,y=sin_scaled, color='red'))
 
 #########################
 ## Fit Regression Model #
@@ -50,10 +51,10 @@ bake(prepped_recipe, new_data=test)
 ## Define model
 boost_model <- boost_tree(
   trees = 200,#tune(), #200
-  tree_depth = tune(), #15
-  learn_rate = 0.1,#tune(), #0.1,
+  tree_depth = 15,#tune(), #15
+  learn_rate = 0.05,#tune(), #0.1,
   mtry = 5,#tune(), #3,
-  min_n = 20, #tune(), #20,
+  min_n = 30, #tune(), #20,
   loss_reduction = 0 #tune(), #0
 ) %>% 
   set_engine("lightgbm") %>% 
