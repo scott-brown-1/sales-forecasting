@@ -21,5 +21,3 @@ setup_recipe <- function(df){
   
   return(prepped_recipe)
 }
-
-## Most people getting 10s and 11s
